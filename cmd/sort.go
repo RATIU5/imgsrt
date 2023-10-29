@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -17,8 +19,7 @@ var (
 		Short: "sort images",
 		Long:  "sort images based on a configuration",
 		Run: func(cmd *cobra.Command, args []string) {
-			out := handleSortCommand(cmd, args)
-			fmt.Println(out)
+			handleSortCommand(cmd, args)
 		},
 	}
 )
@@ -31,8 +32,30 @@ func init() {
 	rootCmd.AddCommand(cmdSort)
 }
 
-func handleSortCommand(cmd *cobra.Command, args []string) string {
-	var output string
+func handleSortCommand(cmd *cobra.Command, args []string) {
+	var outdir string
+	var indir string
+	var pat string
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("error: failed to read cwd")
+	}
 
-	return output
+	if outputPath == "" {
+		outdir = filepath.Join(cwd, "output")
+	} else {
+		outdir = outputPath
+	}
+
+	if inputPath == "" {
+		indir = cwd
+	} else {
+		indir = inputPath
+	}
+
+	if pattern == "" {
+		pat = "y/m"
+	} else {
+		pat = pattern
+	}
 }
