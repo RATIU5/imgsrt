@@ -28,6 +28,7 @@ func init() {
 	cmdSort.Flags().StringVarP(&outputPath, "output", "o", "", "assign the output path of media")
 	cmdSort.Flags().StringVarP(&pattern, "pattern", "p", "", "set the sorting pattern to use")
 	cmdSort.Flags().BoolVarP(&isVerbose, "verbose", "v", false, "set verbose output")
+	rootCmd.AddCommand(cmdSort)
 }
 
 func handleSortCommand(cmd *cobra.Command, args []string) string {

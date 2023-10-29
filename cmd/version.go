@@ -15,3 +15,7 @@ var versionCmd = &cobra.Command{
 		fmt.Printf("imgsrt v%s\n", internal.Version)
 	},
 }
+
+func init() {
+	rootCmd.AddCommand(versionCmd)
+}
