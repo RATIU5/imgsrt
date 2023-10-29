@@ -7,7 +7,7 @@ GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/)
 all: run
 
 server:
-	go build -v -o ${OUT} -ldflags="-X internal/version.Version=${VERSION}" ${PKG}
+	go build -v -o ${OUT} -ldflags="-X github.com/RATIU5/imgsrt/internal.Version=${VERSION}" ${PKG}
 
 test:
 	@go test -short ${PKG_LIST}
@@ -21,7 +21,7 @@ lint:
 	done
 
 static: vet lint
-	go build -i -v -o ${OUT}-v${VERSION} -ldflags="-extldflags \"-static\" -w -s -X internal/version.Version=${VERSION}" ${PKG}
+	go build -i -v -o ${OUT}-v${VERSION} -ldflags="-extldflags \"-static\" -w -s -X github.com/RATIU5/imgsrt/internal.Version=${VERSION}" ${PKG}
 
 run: server
 	./${OUT}
