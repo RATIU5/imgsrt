@@ -154,8 +154,10 @@ func processFile(path string, destDir string) error {
 	if err != nil {
 		return err
 	}
-	destPath := filepath.Join(destDir, filepath.Base(path))
-	err = os.Rename(path, destPath) // use io.Copy if you want to copy instead of move
+	if filepath.Base(path) != "imgsrt.exe" {
+		destPath := filepath.Join(destDir, filepath.Base(path))
+		err = os.Rename(path, destPath) // use io.Copy if you want to copy instead of move
+	}
 	return err
 }
 
