@@ -26,5 +26,8 @@ static: vet lint
 run: server
 	./${OUT}
 
+windows: 
+	GOOS=windows go build -v -o ${OUT} -ldflags="-X github.com/RATIU5/imgsrt/internal.Version=${VERSION}" ${PKG}
+
 clean:
 	-@rm ${OUT} ${OUT}-v*

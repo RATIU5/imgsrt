@@ -187,11 +187,11 @@ var imageExtensions = []string{
 
 var videoExtensions = []string{
 	".mp4", ".mkv", ".flv", ".avi", ".mov",
-	".wmv", ".r3d", // Adding .r3d for high-res Red Digital Cinema files
+	".wmv",
 }
 
 func isImageOrVideo(filename string) bool {
-	ext := filepath.Ext(filename)
+	ext := strings.ToLower(filepath.Ext(filename))
 	for _, imageExt := range imageExtensions {
 		if strings.EqualFold(ext, imageExt) {
 			return true
