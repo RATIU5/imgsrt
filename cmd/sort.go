@@ -172,7 +172,7 @@ func processFiles(indir string, outdir string, dirGen func(time.Time) string) er
 			}
 			err = processFile(path, destDir)
 			if err != nil {
-				return err
+				fmt.Printf("%v\n", err)
 			}
 		}
 
