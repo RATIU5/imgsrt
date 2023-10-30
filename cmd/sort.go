@@ -162,17 +162,17 @@ func processFile(path string, destDir string) error {
 func processFiles(indir string, outdir string, dirGen func(time.Time) string) error {
 	return filepath.Walk(indir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			fmt.Printf("error: %v\n", err)
 		}
 
 		if !info.IsDir() {
 			destDir, err := DetermineDestinationDir(info, path, outdir, dirGen)
 			if err != nil {
-				return err
+				fmt.Printf("error: %s\n", err)
 			}
 			err = processFile(path, destDir)
 			if err != nil {
-				fmt.Printf("%v\n", err)
+				fmt.Printf("error: %v\n", err)
 			}
 		}
 
