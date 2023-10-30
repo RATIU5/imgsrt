@@ -148,17 +148,30 @@ func getFileCreationDate(path string) (time.Time, error) {
 	return date, nil
 }
 
-// processFile processes a single file.
 func processFile(path string, destDir string) error {
 	err := utils.EnsureDir(destDir)
 	if err != nil {
 		return err
 	}
-	if strings.Contains(filepath.Base(path), "imgsrt.exe") {
-		destPath := filepath.Join(destDir, filepath.Base(path))
-		err = os.Rename(path, destPath) // use io.Copy if you want to copy instead of move
+	destPath := filepath.Join(destDir, filepath.Base(path))
+
+	// Ensure a unique filename
+	i := 1
+	for ; ; i++ {
+		if _, err := os.Stat(destPath); os.IsNotExist(err) {
+			break
+		}
+		destPath = filepath.Join(destDir, fmt.Sprintf("%s(%d)%s",
+			strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)),
+			i,
+			filepath.Ext(path)))
 	}
-	return err
+
+	err = os.Rename(path, destPath) // use io.Copy if you want to copy instead of move
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // processFiles processes all files under indir.
@@ -166,6 +179,13 @@ func processFiles(indir string, outdir string, dirGen func(time.Time) string) er
 	return filepath.Walk(indir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
+		}
+
+		if strings.HasPrefix(path, outdir) {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
 		}
 
 		if !info.IsDir() {
