@@ -65,6 +65,7 @@ func handleSortCommand(cmd *cobra.Command, args []string) {
 	}
 
 	dirGen := parsePattern(pat)
+	fmt.Printf("parsing with pattern: '%s', in directory '%s', outputting in '%s'", pat, indir, outdir)
 	err = processFiles(indir, outdir, dirGen)
 	if err != nil {
 		fmt.Println(err)
