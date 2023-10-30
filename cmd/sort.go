@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/RATIU5/imgsrt/internal/utils"
+	"github.com/rwcarlsen/goexif/exif"
 	"github.com/spf13/cobra"
 )
 
@@ -58,12 +59,16 @@ func handleSortCommand(cmd *cobra.Command, args []string) {
 	}
 
 	if pattern == "" {
-		pat = "y/m"
+		pat = "y/M"
 	} else {
 		pat = pattern
 	}
 
 	dirGen := parsePattern(pat)
+	err = processFiles(indir, outdir, dirGen)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func handleAssignedPath(target *string, assigned string, def string) error {
@@ -91,13 +96,111 @@ func parsePattern(pattern string) func(time.Time) string {
 			switch part {
 			case "y":
 				dirs = append(dirs, fmt.Sprintf("%d", t.Year()))
+			case "M":
+				dirs = append(dirs, fmt.Sprintf("%s", t.Month().String()))
 			case "m":
 				dirs = append(dirs, fmt.Sprintf("%02d", t.Month()))
-			// ... handle other pattern parts as needed
+			case "d":
+				dirs = append(dirs, fmt.Sprintf("%02d", t.Day()))
 			default:
 				dirs = append(dirs, part) // treat unrecognized parts as literal directory names
 			}
 		}
 		return strings.Join(dirs, string(os.PathSeparator))
 	}
+}
+
+// DetermineDestinationDir determines the destination directory based on file properties.
+func DetermineDestinationDir(info os.FileInfo, path string, outdir string, dirGen func(time.Time) string) (string, error) {
+	destDir := filepath.Join(outdir, "others")
+	if isImageOrVideo(info.Name()) {
+		date, err := getFileCreationDate(path)
+		if err == nil {
+			dirString := dirGen(date)
+			destDir = filepath.Join(outdir, dirString)
+		}
+	}
+	if info.ModTime().IsZero() {
+		destDir = filepath.Join(outdir, "unknown")
+	}
+	return destDir, nil
+}
+
+// getFileCreationDate extracts the creation date from file metadata.
+func getFileCreationDate(path string) (time.Time, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return time.Time{}, err
+	}
+	defer f.Close()
+
+	x, err := exif.Decode(f)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	date, err := x.DateTime()
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return date, nil
+}
+
+// processFile processes a single file.
+func processFile(path string, destDir string) error {
+	err := utils.EnsureDir(destDir)
+	if err != nil {
+		return err
+	}
+	destPath := filepath.Join(destDir, filepath.Base(path))
+	err = os.Rename(path, destPath) // use io.Copy if you want to copy instead of move
+	return err
+}
+
+// processFiles processes all files under indir.
+func processFiles(indir string, outdir string, dirGen func(time.Time) string) error {
+	return filepath.Walk(indir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			destDir, err := DetermineDestinationDir(info, path, outdir, dirGen)
+			if err != nil {
+				return err
+			}
+			err = processFile(path, destDir)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+var imageExtensions = []string{
+	".jpg", ".jpeg", ".png", ".gif", ".bmp",
+	".tiff", ".webp", ".raw", ".cr2", ".nef",
+}
+
+var videoExtensions = []string{
+	".mp4", ".mkv", ".flv", ".avi", ".mov",
+	".wmv", ".r3d", // Adding .r3d for high-res Red Digital Cinema files
+}
+
+func isImageOrVideo(filename string) bool {
+	ext := filepath.Ext(filename)
+	for _, imageExt := range imageExtensions {
+		if strings.EqualFold(ext, imageExt) {
+			return true
+		}
+	}
+	for _, videoExt := range videoExtensions {
+		if strings.EqualFold(ext, videoExt) {
+			return true
+		}
+	}
+	return false
 }

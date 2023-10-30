@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -9,13 +8,16 @@ import (
 )
 
 func TestNormalizePath(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get current working directory: %v", err)
+	}
 	tests := []struct {
 		input string
 		want  string
 	}{
 		{"~", userHomeDir()},
-		{"./test", filepath.Join(userHomeDir(), "test")},
-		// ... add more test cases
+		{"./test", filepath.Join(cwd, "test")},
 	}
 
 	for _, test := range tests {
@@ -63,7 +65,7 @@ func TestIsDirEmpty(t *testing.T) {
 	}
 
 	// Test case: non-empty directory
-	err = ioutil.WriteFile(filepath.Join(testDir, "test.txt"), []byte("test"), 0644)
+	err = os.WriteFile(filepath.Join(testDir, "test.txt"), []byte("test"), 0644)
 	if err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
